@@ -187,18 +187,25 @@
             color: #2c3e50;
         }
 
-        .ic-input-group input {
+        .ic-input-group input,
+        .ic-input-group select {
             padding: 8px 12px;
             border: 1px solid #ccc;
             border-radius: 4px;
             font-size: 14px;
             transition: all 0.2s ease;
+            background-color: white;
         }
 
-        .ic-input-group input:focus {
+        .ic-input-group input:focus,
+        .ic-input-group select:focus {
             outline: none;
             border-color: #34495e;
             box-shadow: 0 0 0 2px rgba(52, 73, 94, 0.1);
+        }
+
+        .ic-input-group input[readonly] {
+            background-color: #f0f0f0;
         }
 
         .add-route-btn, .remove-route-btn {
@@ -509,7 +516,9 @@
                 </div>
                 <div class="ic-input-group">
                     <label>自宅最寄りIC：</label>
-                    <input type="text" class="ic-to" placeholder="例：八王子">
+                    <select class="ic-to" id="homeICSelect">
+                        <option value="">選択してください</option>
+                    </select>
                     <span></span>
                 </div>
             </div>
@@ -551,6 +560,62 @@
         let commuteRoutes = [];
         let processedData = [];
         let manualEdits = {};
+
+        // 中央道のICリスト（長坂を除く）
+        const CHUO_IC_LIST = [
+            '高井戸', '調布', '稲城', '府中スマート', '国立府中', '八王子', 
+            '相模湖東', '相模湖', '上野原', '談合坂スマート', '大月', 
+            '勝沼', '一宮御坂', '笛吹八代スマート', '甲府南', '甲府中央スマート', 
+            '甲府昭和', '双葉スマート', '韮崎', '須玉', '小淵沢', 
+            '諏訪南', '諏訪', '伊北', '伊那', '小黒川PAスマート', '駒ヶ根', 
+            '駒ヶ岳SAスマート', '松川', '座光寺スマート', '飯田', '飯田山本', 
+            '園原', '中津川', '恵那', '瑞浪', '土岐', '多治見', '小牧東'
+        ];
+
+        // localStorageのキー
+        const STORAGE_KEY = 'etc-checker-home-ic';
+
+        // 自宅最寄りICの保存
+        function saveHomeIC(icName) {
+            if (icName) {
+                localStorage.setItem(STORAGE_KEY, icName);
+            }
+        }
+
+        // 自宅最寄りICの読み込み
+        function loadHomeIC() {
+            return localStorage.getItem(STORAGE_KEY) || '';
+        }
+
+        // ページ読み込み時の初期化
+        window.addEventListener('load', () => {
+            // プルダウンの初期化
+            initializeICSelect();
+            
+            // 保存された値の復元
+            const savedIC = loadHomeIC();
+            if (savedIC) {
+                document.getElementById('homeICSelect').value = savedIC;
+            }
+        });
+
+        // ICプルダウンの初期化
+        function initializeICSelect() {
+            const selectElement = document.getElementById('homeICSelect');
+            
+            // オプションを追加
+            CHUO_IC_LIST.forEach(ic => {
+                const option = document.createElement('option');
+                option.value = ic;
+                option.textContent = ic;
+                selectElement.appendChild(option);
+            });
+            
+            // 変更時の保存処理
+            selectElement.addEventListener('change', (e) => {
+                saveHomeIC(e.target.value);
+            });
+        }
 
         // ファイルソースの切り替え
         function toggleFileSource() {
@@ -680,12 +745,15 @@
             // 通勤ルートを収集（単一ルートのみ）
             commuteRoutes = [];
             const fromInput = document.querySelector('.ic-from');
-            const toInput = document.querySelector('.ic-to');
+            const toSelect = document.getElementById('homeICSelect');
             
             const from = fromInput.value.trim();
-            const to = toInput.value.trim();
+            const to = toSelect.value.trim();
             if (from && to) {
                 commuteRoutes.push({ from, to });
+            } else if (!to) {
+                alert('自宅最寄りICを選択してください');
+                return;
             }
 
             // データ処理とテーブル表示
