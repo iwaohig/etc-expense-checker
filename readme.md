@@ -8,9 +8,12 @@ ETC利用明細から通勤区間を除外し、業務利用分のみを抽出�
 
 ## デモ
 
-[https://{username}.github.io/etc-expense-checker/](https://{username}.github.io/etc-expense-checker/)
+- **メインアプリ**: [https://iwaohig.github.io/etc-expense-checker/](https://iwaohig.github.io/etc-expense-checker/)
+- **アップロード画面**: [https://iwaohig.github.io/etc-expense-checker/upload.html](https://iwaohig.github.io/etc-expense-checker/upload.html)
 
 ## 機能
+
+### メインアプリ (index.html)
 
 - **CSVファイル読み込み**
   - GitHubリポジトリからの自動読み込み
@@ -19,7 +22,8 @@ ETC利用明細から通勤区間を除外し、業務利用分のみを抽出�
 
 - **通勤区間設定**
   - 工場IC：長坂（固定）
-  - 自宅最寄りICを設定可能
+  - 自宅最寄りICをプルダウンから選択
+  - 選択したICは自動的に保存され、次回アクセス時に復元
   - 双方向の移動を自動認識
 
 - **データ処理**
@@ -30,6 +34,20 @@ ETC利用明細から通勤区間を除外し、業務利用分のみを抽出�
 - **エクスポート機能**
   - 業務利用分のみのCSVダウンロード
   - 元のフォーマットを維持
+
+### アップロード画面 (upload.html)
+
+- **ファイルアップロード**
+  - ドラッグ&ドロップまたはクリックでファイル選択
+  - モバイル最適化されたインターフェース
+
+- **内容確認**
+  - 利用期間の表示
+  - 明細数の表示
+  - 合計金額の計算・表示
+
+- **アップロード処理**
+  - 確認後のアップロード実行（デモ）
 
 ## 使い方
 
@@ -48,7 +66,8 @@ ETC利用明細のCSVファイルを準備します。以下の列を含む必�
 ### 2. 通勤区間の設定
 
 1. 工場ICは「長坂」で固定されています
-2. 自宅最寄りICを入力（例：八王子）
+2. 自宅最寄りICをプルダウンから選択
+3. 選択は自動的に保存され、次回アクセス時に復元されます
 
 ### 3. データの読み込みと処理
 
@@ -86,7 +105,7 @@ ETC利用明細のCSVファイルを準備します。以下の列を含む必�
 ### ローカルでの実行
 
 ```bash
-git clone https://github.com/{username}/etc-expense-checker.git
+git clone https://github.com/iwaohig/etc-expense-checker.git
 cd etc-expense-checker
 # HTTPサーバーを起動（Python 3の場合）
 python -m http.server 8000
@@ -98,6 +117,7 @@ python -m http.server 8000
 ```
 etc-expense-checker/
 ├── index.html      # メインアプリケーション
+├── upload.html     # アップロード画面
 ├── data/           # CSVファイル配置用（オプション）
 │   └── etc-data.csv
 └── README.md       # このファイル
@@ -115,6 +135,7 @@ etc-expense-checker/
 - **CSVパース**: Papa Parse 5.3.0
 - **文字エンコーディング**: Shift-JIS対応
 - **ブラウザ要件**: モダンブラウザ（Chrome, Firefox, Safari, Edge）
+- **データ保存**: localStorage（ブラウザローカルストレージ）
 
 ## 注意事項
 
@@ -122,6 +143,7 @@ etc-expense-checker/
 - GitHub Pagesで公開する場合、CSVファイルも公開されることに注意してください
 - プライベートなデータを扱う場合は、ローカルファイルアップロード機能を使用してください
 - IC名の表記は統一してください（「八王子」と「八王子IC」は別として認識されます）
+- 自宅最寄りICの設定はブラウザのlocalStorageに保存されます
 
 ## ライセンス
 
