@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ETC利用明細チェッカー</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 40px;
+            font-size: 2rem;
+            font-weight: 500;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 20px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #fafafa;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .file-source-selector {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .file-source-selector label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: #2c3e50;
+        }
+
+        .file-source-selector input[type="radio"] {
+            cursor: pointer;
+        }
+
+        .github-url-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .github-url-input label {
+            font-weight: 500;
+            color: #2c3e50;
+            min-width: 80px;
+        }
+
+        .github-url-input input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .load-btn {
+            padding: 8px 20px;
+            background: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .load-btn:hover {
+            background: #34495e;
+        }
+
+        .load-status {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .load-status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .load-status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .load-status.loading {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            display: block;
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .file-upload input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-upload-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            border: 2px dashed #ccc;
+            border-radius: 4px;
+            background: #fafafa;
+            transition: all 0.2s ease;
+            font-weight: 400;
+            color: #666;
+        }
+
+        .file-upload:hover .file-upload-label {
+            border-color: #34495e;
+            background: #f0f0f0;
+            color: #34495e;
+        }
+
+        .commute-settings {
+            display: grid;
+            gap: 15px;
+        }
+
+        .ic-input-group {
+            display: grid;
+            grid-template-columns: 120px 1fr auto;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .ic-input-group label {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .ic-input-group input {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .ic-input-group input:focus {
+            outline: none;
+            border-color: #34495e;
+            box-shadow: 0 0 0 2px rgba(52, 73, 94, 0.1);
+        }
+
+        .add-route-btn, .remove-route-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .add-route-btn {
+            background: #34495e;
+            color: white;
+        }
+
+        .add-route-btn:hover {
+            background: #2c3e50;
+        }
+
+        .remove-route-btn {
+            background: #e74c3c;
+            color: white;
+            padding: 6px 12px;
+        }
+
+        .remove-route-btn:hover {
+            background: #c0392b;
+        }
+
+        .process-btn {
+            display: block;
+            width: 100%;
+            padding: 12px 24px;
+            background: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 20px;
+        }
+
+        .process-btn:hover {
+            background: #34495e;
+        }
+
+        .process-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .results-table th {
+            background: #2c3e50;
+            color: white;
+            font-weight: 500;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .results-table tr:hover {
+            background: #f9f9f9;
+        }
+
+        .results-table tr.excluded {
+            background: #ffebee;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .summary-block {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 25px;
+            border-radius: 4px;
+        }
+
+        .summary-block h3 {
+            font-size: 1.1rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 500;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .summary-label {
+            font-size: 0.95rem;
+            color: #6c757d;
+        }
+
+        .summary-value {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .summary-item.total {
+            margin-top: 10px;
+            padding-top: 15px;
+            border-top: 2px solid #dee2e6;
+            border-bottom: none;
+        }
+
+        .summary-item.total .summary-label {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .summary-item.total .summary-value {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .download-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #27ae60;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-weight: 400;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .download-btn:hover {
+            background: #229954;
+        }
+
+        #results {
+            display: none;
+        }
+
+        .table-container {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-top: none;
+        }
+
+        /* スクロールバーのスタイリング */
+        .table-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ETC利用明細チェッカー</h1>
+        
+        <div class="section">
+            <h2 class="section-title">CSVファイル読み込み</h2>
+            <div class="file-source-selector">
+                <label>
+                    <input type="radio" name="fileSource" value="github" checked onchange="toggleFileSource()">
+                    GitHubから自動読み込み
+                </label>
+                <label>
+                    <input type="radio" name="fileSource" value="local" onchange="toggleFileSource()">
+                    ローカルファイルをアップロード
+                </label>
+            </div>
+            <div id="githubSource">
+                <div class="github-url-input">
+                    <label>CSV URL：</label>
+                    <input type="text" id="csvUrl" value="./data/etc-data.csv" placeholder="./data/etc-data.csv または https://raw.githubusercontent.com/...">
+                    <button class="load-btn" onclick="loadCSVFromGitHub()">読み込み</button>
+                </div>
+                <div id="loadStatus" class="load-status"></div>
+            </div>
+            <div id="localSource" style="display: none;">
+                <div class="file-upload">
+                    <input type="file" id="csvFile" accept=".csv">
+                    <label for="csvFile" class="file-upload-label">
+                        クリックしてCSVファイルを選択、またはドラッグ＆ドロップ
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">通勤区間設定</h2>
+            <div class="commute-settings" id="commuteRoutes">
+                <div class="ic-input-group">
+                    <label>出発IC：</label>
+                    <input type="text" class="ic-from" placeholder="例：玉川">
+                    <span></span>
+                </div>
+                <div class="ic-input-group">
+                    <label>到着IC：</label>
+                    <input type="text" class="ic-to" placeholder="例：保土ヶ谷">
+                    <button class="add-route-btn" onclick="addCommuteRoute()">+ 通勤ルート追加</button>
+                </div>
+            </div>
+        </div>
+
+        <button class="process-btn" onclick="processData()" disabled id="processBtn">
+            データを処理する
+        </button>
+
+        <div id="results" class="section">
+            <h2 class="section-title">処理結果</h2>
+            <div class="summary" id="summary"></div>
+            <div class="table-container">
+                <table class="results-table" id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>利用日</th>
+                            <th>時刻</th>
+                            <th>出発IC</th>
+                            <th>到着IC</th>
+                            <th>料金</th>
+                            <th>車両番号</th>
+                            <th>状態</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+            <a href="#" class="download-btn" id="downloadBtn" onclick="downloadFilteredCSV()">
+                通勤除外データをダウンロード
+            </a>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script>
+        let uploadedData = [];
+        let commuteRoutes = [];
+
+        // ファイルソースの切り替え
+        function toggleFileSource() {
+            const selectedSource = document.querySelector('input[name="fileSource"]:checked').value;
+            document.getElementById('githubSource').style.display = selectedSource === 'github' ? 'block' : 'none';
+            document.getElementById('localSource').style.display = selectedSource === 'local' ? 'block' : 'none';
+        }
+
+        // GitHubからCSVを読み込み
+        async function loadCSVFromGitHub() {
+            const csvUrl = document.getElementById('csvUrl').value;
+            const statusDiv = document.getElementById('loadStatus');
+            
+            if (!csvUrl) {
+                statusDiv.className = 'load-status error';
+                statusDiv.textContent = 'URLを入力してください';
+                return;
+            }
+
+            statusDiv.className = 'load-status loading';
+            statusDiv.textContent = 'CSVファイルを読み込み中...';
+
+            try {
+                const response = await fetch(csvUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // ArrayBufferとして取得
+                const arrayBuffer = await response.arrayBuffer();
+                
+                // Shift-JISでデコード
+                const decoder = new TextDecoder('shift-jis');
+                const text = decoder.decode(arrayBuffer);
+                
+                // CSVをパース
+                const results = Papa.parse(text, {
+                    header: true,
+                    skipEmptyLines: true,
+                    dynamicTyping: true
+                });
+                
+                if (results.errors.length > 0) {
+                    console.warn('CSV Parse Warnings:', results.errors);
+                }
+                
+                uploadedData = results.data;
+                document.getElementById('processBtn').disabled = false;
+                
+                statusDiv.className = 'load-status success';
+                statusDiv.textContent = `CSVファイルを読み込みました（${uploadedData.length}件）`;
+                
+                // 自動的に処理を実行（オプション）
+                // processData();
+                
+            } catch (error) {
+                console.error('CSV読み込みエラー:', error);
+                statusDiv.className = 'load-status error';
+                statusDiv.textContent = `読み込みエラー: ${error.message}`;
+                document.getElementById('processBtn').disabled = true;
+            }
+        }
+
+        // ページ読み込み時に自動実行（オプション）
+        window.addEventListener('load', () => {
+            // 自動読み込みを有効にする場合は以下のコメントを外す
+            // loadCSVFromGitHub();
+        });
+
+        // ローカルファイルアップロード処理
+        document.getElementById('csvFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    // Shift-JISでデコード
+                    const arrayBuffer = event.target.result;
+                    const decoder = new TextDecoder('shift-jis');
+                    const text = decoder.decode(arrayBuffer);
+                    
+                    // CSVをパース
+                    const results = Papa.parse(text, {
+                        header: true,
+                        skipEmptyLines: true,
+                        dynamicTyping: true
+                    });
+                    
+                    uploadedData = results.data;
+                    document.getElementById('processBtn').disabled = false;
+                    document.querySelector('.file-upload-label').textContent = `${file.name} をアップロードしました`;
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        });
+
+        // 通勤ルート追加
+        function addCommuteRoute() {
+            const routesDiv = document.getElementById('commuteRoutes');
+            const routeDiv = document.createElement('div');
+            routeDiv.style.display = 'grid';
+            routeDiv.style.gridTemplateColumns = '120px 1fr 120px 1fr auto';
+            routeDiv.style.gap = '10px';
+            routeDiv.style.alignItems = 'center';
+            routeDiv.style.marginTop = '15px';
+            
+            routeDiv.innerHTML = `
+                <label>出発IC：</label>
+                <input type="text" class="ic-from" placeholder="例：茅ヶ崎">
+                <label>到着IC：</label>
+                <input type="text" class="ic-to" placeholder="例：橘">
+                <button class="remove-route-btn" onclick="this.parentElement.remove()">削除</button>
+            `;
+            
+            routesDiv.appendChild(routeDiv);
+        }
+
+        // データ処理
+        function processData() {
+            if (uploadedData.length === 0) {
+                alert('CSVファイルをアップロードしてください');
+                return;
+            }
+
+            // 通勤ルートを収集
+            commuteRoutes = [];
+            const fromInputs = document.querySelectorAll('.ic-from');
+            const toInputs = document.querySelectorAll('.ic-to');
+            
+            fromInputs.forEach((fromInput, index) => {
+                const from = fromInput.value.trim();
+                const to = toInputs[index].value.trim();
+                if (from && to) {
+                    commuteRoutes.push({ from, to });
+                }
+            });
+
+            // データ処理
+            let totalAmount = 0;
+            let excludedAmount = 0;
+            let totalCount = uploadedData.length;
+            let excludedCount = 0;
+
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+
+            uploadedData.forEach(row => {
+                const isCommute = checkIfCommute(row);
+                const amount = parseInt(row['通行料金']) || 0;
+                totalAmount += amount;
+
+                if (isCommute) {
+                    excludedAmount += amount;
+                    excludedCount++;
+                }
+
+                const tr = document.createElement('tr');
+                if (isCommute) {
+                    tr.classList.add('excluded');
+                }
+                
+                tr.innerHTML = `
+                    <td>${row['利用年月日（自）'] || ''}</td>
+                    <td>${row['時分（自）'] || ''}</td>
+                    <td>${row['利用ＩＣ（自）'] || '-'}</td>
+                    <td>${row['利用ＩＣ（至）'] || '-'}</td>
+                    <td>¥${amount.toLocaleString()}</td>
+                    <td>${row['車両番号'] || ''}</td>
+                    <td>${isCommute ? '通勤' : '業務'}</td>
+                `;
+                
+                tableBody.appendChild(tr);
+            });
+
+            // サマリー表示
+            const summaryDiv = document.getElementById('summary');
+            summaryDiv.innerHTML = `
+                <div class="summary-block">
+                    <h3>件数</h3>
+                    <div class="summary-item">
+                        <span class="summary-label">総件数</span>
+                        <span class="summary-value">${totalCount}件</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">通勤利用</span>
+                        <span class="summary-value">${excludedCount}件</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">業務利用</span>
+                        <span class="summary-value">${totalCount - excludedCount}件</span>
+                    </div>
+                    <div class="summary-item total">
+                        <span class="summary-label">業務利用率</span>
+                        <span class="summary-value">${Math.round((totalCount - excludedCount) / totalCount * 100)}%</span>
+                    </div>
+                </div>
+                <div class="summary-block">
+                    <h3>金額</h3>
+                    <div class="summary-item">
+                        <span class="summary-label">総額</span>
+                        <span class="summary-value">¥${totalAmount.toLocaleString()}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">通勤利用額</span>
+                        <span class="summary-value">¥${excludedAmount.toLocaleString()}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">業務利用額</span>
+                        <span class="summary-value">¥${(totalAmount - excludedAmount).toLocaleString()}</span>
+                    </div>
+                    <div class="summary-item total">
+                        <span class="summary-label">業務利用額率</span>
+                        <span class="summary-value">${Math.round((totalAmount - excludedAmount) / totalAmount * 100)}%</span>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 通勤判定
+        function checkIfCommute(row) {
+            const fromIC = row['利用ＩＣ（自）'] || '';
+            const toIC = row['利用ＩＣ（至）'] || '';
+
+            return commuteRoutes.some(route => {
+                // 順方向と逆方向の両方をチェック
+                return (fromIC === route.from && toIC === route.to) ||
+                       (fromIC === route.to && toIC === route.from);
+            });
+        }
+
+        // フィルター済みCSVダウンロード
+        function downloadFilteredCSV() {
+            const filteredData = uploadedData.filter(row => !checkIfCommute(row));
+            
+            const csv = Papa.unparse(filteredData, {
+                header: true
+            });
+
+            // BOMを追加してShift-JISとして保存
+            const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+            const blob = new Blob([bom, csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'etc_business_only_' + new Date().toISOString().slice(0, 10) + '.csv';
+            a.click();
+            
+            URL.revokeObjectURL(url);
+        }
+
+        // ドラッグ&ドロップ対応
+        const fileUploadLabel = document.querySelector('.file-upload-label');
+        
+        fileUploadLabel.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadLabel.style.background = '#f0f0f0';
+            fileUploadLabel.style.borderColor = '#34495e';
+        });
+
+        fileUploadLabel.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            fileUploadLabel.style.background = '#fafafa';
+            fileUploadLabel.style.borderColor = '#ccc';
+        });
+
+        fileUploadLabel.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadLabel.style.background = '#fafafa';
+            fileUploadLabel.style.borderColor = '#ccc';
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                document.getElementById('csvFile').files = files;
+                const event = new Event('change', { bubbles: true });
+                document.getElementById('csvFile').dispatchEvent(event);
+            }
+        });
+    </script>
+</body>
+</html>
